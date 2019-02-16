@@ -74,6 +74,60 @@ public:
         return true; 
     } 
 }; 
+
+class Box
+{
+public:
+
+    Vec3f min;
+    Vec3f max;
+
+    Box(const Vec3f &min, const Vec3f &max) : min(min), max(max)
+    {	   
+    }
+
+    bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1)
+    {
+        float tmin = (min.x - rayorig.x) / raydir.x;
+        float tmax = (max.x - rayorig.x) / raydir.x;
+
+        if (tmin > tmax) std::swap(tmin, tmax);
+
+        float tymin = (min.y - rayorig.y) / raydir.y;
+        float tymax = (max.y - rayorig.y) / raydir.y;
+
+        if (tymin > tymax) std::swap(tymin, tymax);
+
+        if ((tmin > tymax) || (tymin > tmax))
+        return false;
+
+        if (tymin > tmin)
+        tmin = tymin;
+
+        if (tymax < tmax)
+        tmax = tymax;
+
+        float tzmin = (min.z - rayorig.z) / raydir.z;
+        float tzmax = (max.z - rayorig.z) / raydir.z;
+
+        if (tzmin > tzmax) std::swap(tzmin, tzmax);
+
+        if ((tmin > tzmax) || (tzmin > tmax))
+        return false;
+
+        if (tzmin > tmin)
+        tmin = tzmin;
+
+        if (tzmax < tmax)
+        tmax = tzmax;
+
+        t0 = tmin;
+        t1 = tmax;
+
+        return true;
+    }
+};
+
 //Controls max recursion depth
 #define MAX_RAY_DEPTH 5
 
