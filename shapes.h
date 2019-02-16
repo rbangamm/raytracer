@@ -42,11 +42,21 @@ typedef Vec3<float> Vec3f;
 class Shape
 {
 public: 
-    bool intersect(
+    Shape(
+        const Vec3f &sc,
+        const float &refl,
+        const float &transp,
+        const Vec3f &ec) :
+        surfaceColor(sc), emissionColor(ec), transparency(transp),
+        reflection(refl)
+    {}
+    virtual bool intersect(
         const Vec3f &rayorig, 
         const Vec3f &raydir, 
         float &t0, 
-        float &t1);
+        float &t1) const = 0;
+    Vec3f surfaceColor, emissionColor;      /// surface color and emission (light) 
+    float transparency, reflection;         /// surface transparency and reflectivity
 };
 
 class Sphere : public Shape
@@ -54,8 +64,6 @@ class Sphere : public Shape
 public: 
     Vec3f center;                           /// position of the sphere 
     float radius, radius2;                  /// sphere radius and radius^2 
-    Vec3f surfaceColor, emissionColor;      /// surface color and emission (light) 
-    float transparency, reflection;         /// surface transparency and reflectivity 
     Sphere(
         const Vec3f &c,
         const float &r,
@@ -63,8 +71,7 @@ public:
         const float &refl = 0,
         const float &transp = 0,
         const Vec3f &ec = 0) :
-        center(c), radius(r), radius2(r * r), surfaceColor(sc), emissionColor(ec),
-        transparency(transp), reflection(refl)
+        center(c), radius(r), radius2(r * r), Shape(sc, refl, transp, ec)
     {  }
     bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1) const
     {
@@ -86,11 +93,18 @@ public:
 
     Vec3f min;
     Vec3f max;
-
-    Box(const Vec3f &min, const Vec3f &max) : min(min), max(max)
+    Vec3f add = min + max;
+    Vec3f center = Vec3f(add.x / 2.0, add.y / 2.0, add.z / 2.0);
+    Box(
+        const Vec3f &min, 
+        const Vec3f &max, 
+        const Vec3f &sc, 
+        const float &refl = 0,
+        const float &transp = 0,
+        const Vec3f &ec = 0) : min(min), max(max), Shape(sc, refl, transp, ec)
     {
     }
-    bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1)
+    bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1) const
     {
         float tmin = (min.x - rayorig.x) / raydir.x;
         float tmax = (max.x - rayorig.x) / raydir.x;
