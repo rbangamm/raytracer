@@ -221,7 +221,7 @@ void render(const std::vector<Sphere> &spheres)
     delete [] image;
 }
 
-void render_box(const std::vector<Box> &spheres) {
+void render_box(const std::vector<Box> &boxes) {
     unsigned width = 1200, height = 720; //640 480
     Vec3f *image = new Vec3f[width * height], *pixel = image;
     float invWidth = 1 / float(width), invHeight = 1 / float(height);
@@ -234,7 +234,7 @@ void render_box(const std::vector<Box> &spheres) {
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3f raydir(xx, yy, -1);
             raydir.normalize();
-            *pixel = trace_box(Vec3f(0), raydir, spheres, 0);
+            *pixel = trace_box(Vec3f(0), raydir, boxes, 0);
         }
     }
     // Save result to a PPM image (keep these flags if you compile under Windows)
@@ -247,6 +247,36 @@ void render_box(const std::vector<Box> &spheres) {
     }
     ofs.close();
     delete [] image;
+
+}
+
+void render_both(const std::vector<Sphere> &spheres, const std::vector<Box> &boxes) {
+    unsigned width = 1200, height = 720; //640 480
+    Vec3f *image = new Vec3f[width * height], *pixel = image;
+    float invWidth = 1 / float(width), invHeight = 1 / float(height);
+    float fov = 30, aspectratio = width / float(height);
+    float angle = tan(M_PI * 0.5 * fov / 180.);
+    // Trace rays
+    for (unsigned y = 0; y < height; ++y) {
+        for (unsigned x = 0; x < width; ++x, ++pixel) {
+            float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
+            float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
+            Vec3f raydir(xx, yy, -1);
+            raydir.normalize();
+            *pixel = Vec3f(0) * trace_box(Vec3f(0), raydir, boxes, 0) + trace(Vec3f(0), raydir, spheres, 0);
+        }
+    }
+    // Save result to a PPM image (keep these flags if you compile under Windows)
+    std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
+    ofs << "P6\n" << width << " " << height << "\n255\n";
+    for (unsigned i = 0; i < width * height; ++i) {
+        ofs << (unsigned char)(std::min(float(1), image[i].x) * 255) <<
+               (unsigned char)(std::min(float(1), image[i].y) * 255) <<
+               (unsigned char)(std::min(float(1), image[i].z) * 255);
+    }
+    ofs.close();
+    delete [] image;
+
 
 }
 
@@ -263,10 +293,12 @@ int main(int argc, char **argv)
     spheres.push_back(Sphere(Vec3f(-5.5,      0, -15),     3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
     // light
     spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
+    //box light
+    boxes.push_back(Box(Vec3f(20, 0, 10), Vec3f(-20, 40, -10), Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     boxes.push_back(
-        Box(Vec3f(100, 100, 100), Vec3f(-100, -100, -100), Vec3f(0.20, 0.20, 0.20), 0, 0.0));
+        Box(Vec3f(100, -5004, 100), Vec3f(-100, -15004, -100), Vec3f(1.00, 0.20, 0.20), 0, 0.0));
     //render(spheres);
-    render_box(boxes);
+    render_both(spheres, boxes);
 
     return 0;
 }
