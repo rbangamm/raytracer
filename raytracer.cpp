@@ -112,36 +112,38 @@ Vec3f
 trace_box(
     const Vec3f &rayorig,
     const Vec3f &raydir,
-    const std::vector<Box> &spheres,
+    const std::vector<Box> &boxes,
     const int &depth)
 {
     float tnear = INFINITY;
-    const Box* sphere = NULL;
-    // find intersection of this ray with the sphere in the scene
-    for (unsigned i = 0; i < spheres.size(); ++i) {
+    const Box* box = NULL;
+    // find intersection of this ray with the box in the scene
+    for (unsigned i = 0; i < boxes.size(); ++i) {
         float t0 = INFINITY, t1 = INFINITY;
-        if (spheres[i].intersect(rayorig, raydir, t0, t1)) {
+        if (boxes[i].intersect(rayorig, raydir, t0, t1)) {
             if (t0 < 0) t0 = t1;
             if (t0 < tnear) {
                 tnear = t0;
-                sphere = &spheres[i];
+                box = &boxes[i];
             }
+            //std::cout << "here" << "\n";
         }
     }
+    std::cout << box << "\n";
     // if there's no intersection return black or background color
-    if (!sphere) return Vec3f(2);
+    if (!box) return Vec3f(2);
     Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray 
     Vec3f phit = rayorig + raydir * tnear; // point of intersection 
-    Vec3f nhit = phit - sphere->center; // normal at the intersection point 
+    Vec3f nhit = phit - box->center; // normal at the intersection point 
     nhit.normalize(); // normalize normal direction 
     // If the normal and the view direction are not opposite to each other
-    // reverse the normal direction. That also means we are inside the sphere so set
+    // reverse the normal direction. That also means we are inside the box so set
     // the inside bool to true. Finally reverse the sign of IdotN which we want
     // positive.
     float bias = 1e-4; // add some bias to the point from which we will be tracing 
     bool inside = false;
     if (raydir.dot(nhit) > 0) nhit = -nhit, inside = true;
-    if ((sphere->transparency > 0 || sphere->reflection > 0) && depth < MAX_RAY_DEPTH) {
+    if ((box->transparency > 0 || box->reflection > 0) && depth < MAX_RAY_DEPTH) {
         float facingratio = -raydir.dot(nhit);
         // change the mix value to tweak the effect
         float fresneleffect = mix(pow(1 - facingratio, 3), 1, 0.1);
@@ -149,47 +151,47 @@ trace_box(
         // are already normalized)
         Vec3f refldir = raydir - nhit * 2 * raydir.dot(nhit);
         refldir.normalize();
-        Vec3f reflection = trace_box(phit + nhit * bias, refldir, spheres, depth + 1);
+        Vec3f reflection = trace_box(phit + nhit * bias, refldir, boxes, depth + 1);
         Vec3f refraction = 0;
-        // if the sphere is also transparent compute refraction ray (transmission)
-        if (sphere->transparency) {
+        // if the box is also transparent compute refraction ray (transmission)
+        if (box->transparency) {
             float ior = 1.1, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface? 
             float cosi = -nhit.dot(raydir);
             float k = 1 - eta * eta * (1 - cosi * cosi);
             Vec3f refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k));
             refrdir.normalize();
-            refraction = trace_box(phit - nhit * bias, refrdir, spheres, depth + 1);
+            refraction = trace_box(phit - nhit * bias, refrdir, boxes, depth + 1);
         }
-        // the result is a mix of reflection and refraction (if the sphere is transparent)
+        // the result is a mix of reflection and refraction (if the box is transparent)
         surfaceColor = (
             reflection * fresneleffect +
-            refraction * (1 - fresneleffect) * sphere->transparency) * sphere->surfaceColor;
+            refraction * (1 - fresneleffect) * box->transparency) * box->surfaceColor;
     }
     else {
         // it's a diffuse object, no need to raytrace any further
-        for (unsigned i = 0; i < spheres.size(); ++i) {
-            if (spheres[i].emissionColor.x > 0) {
+        for (unsigned i = 0; i < boxes.size(); ++i) {
+            if (boxes[i].emissionColor.x > 0) {
                 // this is a light
                 Vec3f transmission = 1;
-                Vec3f add = Vec3f(spheres[i].min + spheres[i].max);
+                Vec3f add = Vec3f(boxes[i].min + boxes[i].max);
                 Vec3f center = Vec3f(add.x / 2.0, add.y / 2.0, add.z / 2.0);
                 Vec3f lightDirection = center - phit;
                 lightDirection.normalize();
-                for (unsigned j = 0; j < spheres.size(); ++j) {
+                for (unsigned j = 0; j < boxes.size(); ++j) {
                     if (i != j) {
                         float t0, t1;
-                        if (spheres[j].intersect(phit + nhit * bias, lightDirection, t0, t1)) {
+                        if (boxes[j].intersect(phit + nhit * bias, lightDirection, t0, t1)) {
                             transmission = 0;
                             break;
                         }
                     }
                 }
-                surfaceColor += sphere->surfaceColor * transmission *
-                std::max(float(0), nhit.dot(lightDirection)) * spheres[i].emissionColor;
+                surfaceColor += box->surfaceColor * transmission *
+                std::max(float(0), nhit.dot(lightDirection)) * boxes[i].emissionColor;
             }
         }
     }
-    return surfaceColor + sphere->emissionColor;
+    return surfaceColor + box->emissionColor;
 }
 
 void render(const std::vector<Sphere> &spheres)
@@ -221,6 +223,7 @@ void render(const std::vector<Sphere> &spheres)
     delete [] image;
 }
 
+// Needs fix
 void render_box(const std::vector<Box> &boxes) {
     unsigned width = 1200, height = 720; //640 480
     Vec3f *image = new Vec3f[width * height], *pixel = image;
@@ -250,6 +253,7 @@ void render_box(const std::vector<Box> &boxes) {
 
 }
 
+// Needs fix
 void render_both(const std::vector<Sphere> &spheres, const std::vector<Box> &boxes) {
     unsigned width = 1200, height = 720; //640 480
     Vec3f *image = new Vec3f[width * height], *pixel = image;
@@ -297,8 +301,8 @@ int main(int argc, char **argv)
     boxes.push_back(Box(Vec3f(20, 0, 10), Vec3f(-20, 40, -10), Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     boxes.push_back(
         Box(Vec3f(100, -5004, 100), Vec3f(-100, -15004, -100), Vec3f(1.00, 0.20, 0.20), 0, 0.0));
-    //render(spheres);
-    render_both(spheres, boxes);
+    render_box(boxes);
+    //render_both(spheres, boxes);
 
     return 0;
 }
