@@ -1,4 +1,5 @@
 // Header file for geometry classes
+#include <iostream>
 #include <cstdlib>
 #include <cmath>
 #include <fstream>
@@ -27,6 +28,7 @@ public:
     Vec3<T> operator + (const Vec3<T> &v) const { return Vec3<T>(x + v.x, y + v.y, z + v.z); }
     Vec3<T>& operator += (const Vec3<T> &v) { x += v.x, y += v.y, z += v.z; return *this; }
     Vec3<T>& operator *= (const Vec3<T> &v) { x *= v.x, y *= v.y, z *= v.z; return *this; }
+    bool operator != (const Vec3<T> &v) const { return x != v.x || y != v.y || z != v.z; }
     Vec3<T> operator - () const { return Vec3<T>(-x, -y, -z); }
     T length2() const { return x * x + y * y + z * z; }
     T length() const { return sqrt(length2()); }
@@ -138,6 +140,11 @@ public:
 
         if (tzmax < tmax)
         tmax = tzmax;
+
+        if (false) {
+            std::cout << "Max: " << std::to_string(tmax) << "\n";
+            std::cout << "Min: " << std::to_string(tmin) << "\n";
+        }
 
         t0 = tmin;
         t1 = tmax;

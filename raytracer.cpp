@@ -3,6 +3,7 @@
 #include <cmath> 
 #include <fstream> 
 #include <vector> 
+#include <set>
 #include <iostream> 
 #include <cassert>
 #include "shapes.h"
@@ -129,13 +130,17 @@ trace_box(
             //std::cout << "here" << "\n";
         }
     }
-    std::cout << box << "\n";
     // if there's no intersection return black or background color
     if (!box) return Vec3f(2);
+    //return box->surfaceColor;
     Vec3f surfaceColor = 0; // color of the ray/surfaceof the object intersected by the ray 
-    Vec3f phit = rayorig + raydir * tnear; // point of intersection 
+    Vec3f phit = rayorig + raydir * tnear; // point of intersection
+    //std::cout << phit << "\n";
+    //std::cout << box->center << "\n";
     Vec3f nhit = phit - box->center; // normal at the intersection point 
-    nhit.normalize(); // normalize normal direction 
+    nhit.normalize(); // normalize normal direction
+    //std::cout << nhit << "\n";
+    //std::cout << "Phit: " << phit << "Nhit: " << nhit << "\n";
     // If the normal and the view direction are not opposite to each other
     // reverse the normal direction. That also means we are inside the box so set
     // the inside bool to true. Finally reverse the sign of IdotN which we want
@@ -177,6 +182,8 @@ trace_box(
                 Vec3f center = Vec3f(add.x / 2.0, add.y / 2.0, add.z / 2.0);
                 Vec3f lightDirection = center - phit;
                 lightDirection.normalize();
+                std::cout << "Nhit: " << nhit << "\n";
+                std::cout << "Direction: " << lightDirection << "\n";
                 for (unsigned j = 0; j < boxes.size(); ++j) {
                     if (i != j) {
                         float t0, t1;
@@ -186,10 +193,17 @@ trace_box(
                         }
                     }
                 }
+                if (nhit.dot(lightDirection) > 0) {
+                    std::cout << nhit.dot(lightDirection) << "\n";
+                }
                 surfaceColor += box->surfaceColor * transmission *
                 std::max(float(0), nhit.dot(lightDirection)) * boxes[i].emissionColor;
             }
         }
+    }
+    //std::cout << box->emissionColor << "\n";
+    if (surfaceColor + box->emissionColor != Vec3f(0)) {
+       //std::cout << surfaceColor + box->emissionColor << "\n"; 
     }
     return surfaceColor + box->emissionColor;
 }
@@ -237,6 +251,7 @@ void render_box(const std::vector<Box> &boxes) {
             float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
             Vec3f raydir(xx, yy, -1);
             raydir.normalize();
+            //std::cout << "Raydir: " << raydir << "\n";
             *pixel = trace_box(Vec3f(0), raydir, boxes, 0);
         }
     }
@@ -298,11 +313,11 @@ int main(int argc, char **argv)
     // light
     spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     //box light
-    boxes.push_back(Box(Vec3f(20, 0, 10), Vec3f(-20, 40, -10), Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
+    boxes.push_back(Box(Vec3f(-20, -3000, -30), Vec3f(20, -1000, -10), Vec3f(0.20, 0.20, 0.20), 0, 0.0, Vec3f(3)));
     boxes.push_back(
-        Box(Vec3f(100, -5004, 100), Vec3f(-100, -15004, -100), Vec3f(1.00, 0.20, 0.20), 0, 0.0));
+        Box(Vec3f(0, -5, -25), Vec3f(10, 5, -20), Vec3f(1.00, 0.20, 0.20), 0, 0.0));
     render_box(boxes);
-    //render_both(spheres, boxes);
+    //render(spheres);
 
     return 0;
 }
