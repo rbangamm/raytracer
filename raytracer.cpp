@@ -10,7 +10,7 @@
 
 
 //Controls max recursion depth
-#define MAX_RAY_DEPTH 5
+#define MAX_RAY_DEPTH 20
 
 float mix(const float &a, const float &b, const float &mix)
 {
@@ -313,9 +313,9 @@ int main(int argc, char **argv)
     // light
     spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     //box light
-    boxes.push_back(Box(Vec3f(-20, -3000, -30), Vec3f(20, -1000, -10), Vec3f(0.20, 0.20, 0.20), 0, 0.0, Vec3f(3)));
+    boxes.push_back(Box(Vec3f(0, 20, -10), Vec3f(20, 10, -5), Vec3f(0.20, 0.20, 0.20), 0, 0.0, Vec3f(3)));
     boxes.push_back(
-        Box(Vec3f(0, -5, -25), Vec3f(10, 5, -20), Vec3f(1.00, 0.20, 0.20), 0, 0.0));
+        Box(Vec3f(-5, -5, -100), Vec3f(5, 5, -50), Vec3f(0.00, 255.00, 0.00), 1, 0.0));
     render_box(boxes);
     //render(spheres);
 
