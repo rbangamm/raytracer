@@ -182,8 +182,8 @@ trace_box(
                 Vec3f center = Vec3f(add.x / 2.0, add.y / 2.0, add.z / 2.0);
                 Vec3f lightDirection = center - phit;
                 lightDirection.normalize();
-                std::cout << "Nhit: " << nhit << "\n";
-                std::cout << "Direction: " << lightDirection << "\n";
+                //std::cout << "Nhit: " << nhit << "\n";
+                //std::cout << "Direction: " << lightDirection << "\n";
                 for (unsigned j = 0; j < boxes.size(); ++j) {
                     if (i != j) {
                         float t0, t1;
@@ -194,7 +194,7 @@ trace_box(
                     }
                 }
                 if (nhit.dot(lightDirection) > 0) {
-                    std::cout << nhit.dot(lightDirection) << "\n";
+                    //std::cout << nhit.dot(lightDirection) << "\n";
                 }
                 surfaceColor += box->surfaceColor * transmission *
                 std::max(float(0), nhit.dot(lightDirection)) * boxes[i].emissionColor;
@@ -268,52 +268,21 @@ void render_box(const std::vector<Box> &boxes) {
 
 }
 
-// Needs fix
-void render_both(const std::vector<Sphere> &spheres, const std::vector<Box> &boxes) {
-    unsigned width = 1200, height = 720; //640 480
-    Vec3f *image = new Vec3f[width * height], *pixel = image;
-    float invWidth = 1 / float(width), invHeight = 1 / float(height);
-    float fov = 30, aspectratio = width / float(height);
-    float angle = tan(M_PI * 0.5 * fov / 180.);
-    // Trace rays
-    for (unsigned y = 0; y < height; ++y) {
-        for (unsigned x = 0; x < width; ++x, ++pixel) {
-            float xx = (2 * ((x + 0.5) * invWidth) - 1) * angle * aspectratio;
-            float yy = (1 - 2 * ((y + 0.5) * invHeight)) * angle;
-            Vec3f raydir(xx, yy, -1);
-            raydir.normalize();
-            *pixel = Vec3f(0) * trace_box(Vec3f(0), raydir, boxes, 0) + trace(Vec3f(0), raydir, spheres, 0);
-        }
-    }
-    // Save result to a PPM image (keep these flags if you compile under Windows)
-    std::ofstream ofs("./untitled.ppm", std::ios::out | std::ios::binary);
-    ofs << "P6\n" << width << " " << height << "\n255\n";
-    for (unsigned i = 0; i < width * height; ++i) {
-        ofs << (unsigned char)(std::min(float(1), image[i].x) * 255) <<
-               (unsigned char)(std::min(float(1), image[i].y) * 255) <<
-               (unsigned char)(std::min(float(1), image[i].z) * 255);
-    }
-    ofs.close();
-    delete [] image;
-
-
-}
-
 int main(int argc, char **argv)
 {
     srand48(13);
     std::vector<Sphere> spheres;
     std::vector<Box> boxes;
     // position, radius, surface color, reflectivity, transparency, emission color
-    spheres.push_back(Sphere(Vec3f( 1.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 0.0));
-    spheres.push_back(Sphere(Vec3f( 0.0,      0, -20),     4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
-    spheres.push_back(Sphere(Vec3f( 5.0,     -1, -15),     2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
-    spheres.push_back(Sphere(Vec3f( 5.0,      0, -25),     3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
-    spheres.push_back(Sphere(Vec3f(-5.5,      0, -15),     3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
+    //spheres.push_back(Sphere(Vec3f( 1.0, -10004, -20), 10000, Vec3f(0.20, 0.20, 0.20), 0, 0.0));
+    //spheres.push_back(Sphere(Vec3f( 0.0,      0, -20),     4, Vec3f(1.00, 0.32, 0.36), 1, 0.5));
+    //spheres.push_back(Sphere(Vec3f( 5.0,     -1, -15),     2, Vec3f(0.90, 0.76, 0.46), 1, 0.0));
+    //spheres.push_back(Sphere(Vec3f( 5.0,      0, -25),     3, Vec3f(0.65, 0.77, 0.97), 1, 0.0));
+    //spheres.push_back(Sphere(Vec3f(-5.5,      0, -15),     3, Vec3f(0.90, 0.90, 0.90), 1, 0.0));
     // light
-    spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
+    //spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     //box light
-    boxes.push_back(Box(Vec3f(0, 20, -10), Vec3f(20, 10, -5), Vec3f(0.20, 0.20, 0.20), 0, 0.0, Vec3f(3)));
+    boxes.push_back(Box(Vec3f(0, 20, -10), Vec3f(20, 10, -5), Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
     boxes.push_back(
         Box(Vec3f(-5, -5, -100), Vec3f(5, 5, -50), Vec3f(0.00, 255.00, 0.00), 1, 0.0));
     render_box(boxes);

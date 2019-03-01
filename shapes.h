@@ -108,15 +108,28 @@ public:
     }
     bool intersect(const Vec3f &rayorig, const Vec3f &raydir, float &t0, float &t1) const
     {
-        float tmin = (min.x - rayorig.x) / raydir.x;
-        float tmax = (max.x - rayorig.x) / raydir.x;
+	float tmin;
+	float tmax;
+	float tymin;
+	float tymax;
+	float tzmin;
+	float tzmax;
+	
+	if (1 / raydir.x >= 0) {
+	    tmin = (min.x - rayorig.x) / raydir.x;
+	    tmax = (max.x - rayorig.x) / raydir.x;
+	} else {
+	    tmin = (max.x - rayorig.x) / raydir.x;
+	    tmax = (min.x - rayorig.x) / raydir.x;
+	}
 
-        if (tmin > tmax) std::swap(tmin, tmax);
-
-        float tymin = (min.y - rayorig.y) / raydir.y;
-        float tymax = (max.y - rayorig.y) / raydir.y;
-
-        if (tymin > tymax) std::swap(tymin, tymax);
+	if (1 / raydir.y >= 0) {
+	    tymin = (min.y - rayorig.y) / raydir.y;
+	    tymax = (max.y - rayorig.y) / raydir.y;
+	} else {
+	    tymin = (max.y - rayorig.y) / raydir.y;
+	    tymax = (min.y - rayorig.y) / raydir.y;
+	}
 
         if ((tmin > tymax) || (tymin > tmax))
         return false;
@@ -127,10 +140,13 @@ public:
         if (tymax < tmax)
         tmax = tymax;
 
-        float tzmin = (min.z - rayorig.z) / raydir.z;
-        float tzmax = (max.z - rayorig.z) / raydir.z;
-
-        if (tzmin > tzmax) std::swap(tzmin, tzmax);
+	if (1 / raydir.z >= 0) {
+	    tzmin = (min.z - rayorig.z) / raydir.z;
+	    tzmax = (max.z - rayorig.z) / raydir.z;
+	} else {
+	    tzmin = (max.z - rayorig.z) / raydir.z;
+	    tzmax = (min.z - rayorig.z) / raydir.z;
+	}
 
         if ((tmin > tzmax) || (tzmin > tmax))
         return false;
